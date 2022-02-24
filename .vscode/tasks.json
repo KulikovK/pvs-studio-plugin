@@ -15,6 +15,12 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+	
+		{"label": "npm",
+		 "command": "node",
+		 "args": ["node_modules\tsc\bin"]
 		}
+	
 	]
 }

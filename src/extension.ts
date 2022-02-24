@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import * as vscode from 'vscode';
 import { PVSReport } from './PVSReport';
 
+
+
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "pvs-studio-plugin" is now active!');
 
@@ -21,7 +23,8 @@ export function activate(context: vscode.ExtensionContext) {
 			{}
 		  );
 		  PVSReportsPanel.webview.html = CreateTable(PVSJsonReports);
-
+          
+		
 
 	});
 
@@ -29,21 +32,27 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 
+
 function CreateTable(pvsrep : PVSReport)
 {
-	let html  = '<table border="1px solid"';
-     html += '<tr><th>Code</th><th>CWE</th><th>SAST</th><th>Message</th><th>File</th></tr>';
+	let html  = '<table id="pvst" border="1px solid"';
+     html += '<tr><th>Code</th><th>CWE</th><th>SAST</th><th>Message</th><th>Project</th><th>File</th></tr>';
      
 	 pvsrep.warnings.forEach((warning) =>{
       html+= "<tr>" + "<td>" + warning.code + "</td>"+ "<td>" + warning.cwe + "</td><td>" + warning.sastId + 
 	  "</td><td>"+warning.message+ "</td><td>";
+	  warning.projects.forEach((proj)=>{
+        html+= "" + proj + "<br>";
+	  });
+html+="</td><td>";
 	  warning.positions.forEach(element => {
-		  html+= "<br><a href='>" + element.file + "'>"+ element.file +"</a>" + "(" + element.line + ")";
+		  html+= "<a href='>" + element.file + "'>"+ element.file +"</a>" + "(" + element.line + ")<br>tsc ";
 	  });
 	  html+= "</td></tr>";
 	 });
 
 	html+="</table>";
+
 	return html;
 }
 
