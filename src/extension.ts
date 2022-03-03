@@ -31,6 +31,41 @@ const jsonFile = require('jsonfile');
 
 
 
+class PVSReportProvide implements vscode.WebviewViewProvider
+{
+	private _view?: vscode.WebviewView;
+
+	public static readonly viewType = 'PVSPanelView';
+	constructor(
+		private readonly _extensionUri: vscode.Uri, private readonly PVSReports : PVSReport=new PVSReport,
+	) { }
+
+	public resolveWebviewView(
+		webviewView: vscode.WebviewView,
+		context: vscode.WebviewViewResolveContext,
+		_token: vscode.CancellationToken,
+	) {
+		this._view = webviewView;
+
+		webviewView.webview.options = {
+			// Allow scripts in the webview
+			enableScripts: true,
+
+			localResourceRoots: [
+				this._extensionUri
+			]
+		};
+
+		webviewView.webview.html = CreateTable(this.PVSReports);
+
+	}
+
+
+	 
+
+}
+
+
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "pvs-studio-plugin" is now active!');
 
@@ -40,12 +75,18 @@ export function activate(context: vscode.ExtensionContext) {
 		var PVSJSON = vscode.window.showOpenDialog();
 		let test : PVSReport = new PVSReport();
 
-		const PVSReportsPanel = vscode.window.createWebviewPanel(
-			'Reports view',
+	/* 	const PVSReportsPanel = vscode.window.createWebviewPanel(
+			'PVSPanelView',
 			'PVS-Report View',
-			vscode.ViewColumn.One,
+			vscode.ViewColumn.Beside,
 			{enableScripts: true}
-		  );
+		  ); */
+
+	
+		  
+
+	
+  
 
 		PVSJSON.then( prop => {
 		
@@ -55,10 +96,9 @@ export function activate(context: vscode.ExtensionContext) {
 					    console.log(file.fsPath);
                         const Report = jsonFile.readFileSync(file.fsPath);
 						console.log(Report);
-						PVSReportsPanel.webview.html = CreateTable(Report);
-							/* const table = $('#pvst').DataTable({
-								paging: true
-							}); */
+						let ReportProvideData = new PVSReportProvide(context.extensionUri);
+						vscode.window.registerWebviewViewProvider("PVSPanelView", ReportProvideData);
+						
 									
 				}
 			});
@@ -67,13 +107,20 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	
+   
+    
+ 
+
+
+
 	context.subscriptions.push(disposable);
 }
 
 var dtScript =`
  <script> 
     const table = $('#pvst').DataTable({
-		paging: true
+		paging: true,
+		responsive: true
 	}); 
 	
 </script>`;
@@ -89,10 +136,15 @@ function CreateTable(pvsrep : PVSReport)
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Cat Coding</title>
 		
+				
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css"/>
-        <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.js"></script>
-        <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.js"></script>
-        <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.css"/>
+		 
+		<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.js"></script>
+		<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+		<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.js"></script>
+		
+		
         
 
 	</head> <body style="background: white">`;
@@ -108,7 +160,8 @@ function CreateTable(pvsrep : PVSReport)
 	  });
 html+="</td><td>";
 	  warning.positions.forEach(element => {
-		  html+= "<a href='>" + element.file + "'>"+ element.file +"</a>" + "(" + element.line + ")<br>tsc ";
+		  html+= "<a onclick= 'ShowFile(`"+ element.file +"`, "+element.line+")' >"+ element.file +"</a>" + "(" + element.line + ")<br>";
+		
 	  });
 	  html+= "</td></tr>";
 	 });

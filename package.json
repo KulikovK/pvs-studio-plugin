@@ -19,7 +19,28 @@
         "command": "pvs-studio-plugin.OpenReportsFile",
         "title": "Open reports file PVS-Studio (JSON)"
       }
-    ]
+    ],
+    "viewsContainers": {
+     "panel": [
+       {
+         "id": "PVSPanel",
+         "title": "PVS Report",
+         "icon": ""
+       }
+     ]
+    },
+    "views": {
+      "PVSPanel" :[
+        {
+          "id": "PVSPanelView",
+          "name": "PVS Panel View",
+          "icon": "",
+          "type": "webview"
+          
+          
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
