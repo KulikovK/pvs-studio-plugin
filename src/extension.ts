@@ -8,17 +8,15 @@ import 'reflect-metadata';
 //const DataTables = require('datatables.net');
 //const DataTablesDT = require('datatables.net-dt');
 
+import "jquery";
 
 
 
-import jsdom = require( 'jsdom');
-import $ = require('jquery');
 
 
 //import jsdom = require( 'jsdom');
 
-import 'datatables.net';
-import 'datatables.net-dt';
+
 
 
 
@@ -37,7 +35,8 @@ class PVSReportProvide implements vscode.WebviewViewProvider
 
 	public static readonly viewType = 'PVSPanelView';
 	constructor(
-		private readonly _extensionUri: vscode.Uri, private readonly PVSReports : PVSReport=new PVSReport,
+		private readonly _extensionUri: vscode.Uri, private readonly PVSReports : PVSReport = new PVSReport(),
+		private readonly contextVSCode : vscode.ExtensionContext
 	) { }
 
 	public resolveWebviewView(
@@ -56,7 +55,32 @@ class PVSReportProvide implements vscode.WebviewViewProvider
 			]
 		};
 
+		
+
 		webviewView.webview.html = CreateTable(this.PVSReports);
+
+		webviewView.webview.onDidReceiveMessage(MsgIt =>{
+			switch(MsgIt.command){
+				case 'ShowFile':
+					{
+					// vscode.window.showInformationMessage(MsgIt.file);
+					 vscode.window.showInformationMessage(MsgIt.line);
+					 let TextDoc =  vscode.workspace.openTextDocument(MsgIt.file);
+					
+				 TextDoc.then(value => {
+					 let editor = vscode.window.showTextDocument(value, {preview: true});
+					     MsgIt.line -= 1;
+					     editor.then(edit =>{ {
+					     edit.selection = new vscode.Selection(new vscode.Position(0, 0), new vscode.Position(0, 0));
+						 const Pos = edit.selection.active;
+						 const NewPos = Pos.with(MsgIt.line, 0);
+						 const newSelection = new vscode.Selection(NewPos, new vscode.Position(MsgIt.line, 2147483647));
+						 edit.selection = newSelection;
+					 }});
+				 });
+					}
+			}
+		 }, undefined, this.contextVSCode.subscriptions);
 
 	}
 
@@ -96,9 +120,10 @@ export function activate(context: vscode.ExtensionContext) {
 					    console.log(file.fsPath);
                         const Report = jsonFile.readFileSync(file.fsPath);
 						console.log(Report);
-						let ReportProvideData = new PVSReportProvide(context.extensionUri);
+						let ReportProvideData = new PVSReportProvide(context.extensionUri, Report, context);
 						vscode.window.registerWebviewViewProvider("PVSPanelView", ReportProvideData);
 						
+						var n= CreateTable(Report);
 									
 				}
 			});
@@ -122,6 +147,17 @@ var dtScript =`
 		paging: true,
 		responsive: true
 	}); 
+
+	function ShowFile(filePath, line)
+	{
+		filePath.replaceAll("\\\\", "////////");
+		const vscode = acquireVsCodeApi();
+		vscode.postMessage({
+			command: 'ShowFile',
+			file: filePath,
+			line: line
+		});
+	}
 	
 </script>`;
 
@@ -160,7 +196,7 @@ function CreateTable(pvsrep : PVSReport)
 	  });
 html+="</td><td>";
 	  warning.positions.forEach(element => {
-		  html+= "<a onclick= 'ShowFile(`"+ element.file +"`, "+element.line+")' >"+ element.file +"</a>" + "(" + element.line + ")<br>";
+		  html+= "<a onclick= 'ShowFile(\""+ element.file.replace(/\\/g, '\\\\') +"\", "+element.line+")' >"+ element.file +"</a>" + "(" + element.line + ")<br>";
 		
 	  });
 	  html+= "</td></tr>";
