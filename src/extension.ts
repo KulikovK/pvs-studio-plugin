@@ -1,7 +1,4 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-
-import { Serializable } from 'ts-serializable';
-import { fileURLToPath } from 'url';
 import * as vscode from 'vscode';
 import { PVSReport, PVSWarningsInfo } from './PVSReport';
 import 'reflect-metadata';
@@ -44,6 +41,7 @@ class PVSReportProvide implements vscode.WebviewViewProvider
 		_token: vscode.CancellationToken,
 	) {
 		this._view = webviewView;
+		
 
 		webviewView.webview.options = {
 			// Allow scripts in the webview
@@ -61,19 +59,22 @@ class PVSReportProvide implements vscode.WebviewViewProvider
 				case 'ShowFile':
 					{
 				 let TextDoc =  vscode.workspace.openTextDocument(MsgIt.file);
-					
+				
 				 TextDoc.then(value => {
-					 let editor = vscode.window.showTextDocument(value, {preview: true});
+					
+					 let editor = vscode.window.showTextDocument(value, {preview: false});
 					     MsgIt.line -= 1;
 						 MsgIt.endLine -= 1;
 						 MsgIt.endColumn -= 1;
 						 MsgIt.column -= 1;
 					     editor.then(edit =>{ {
-					     edit.selection = new vscode.Selection(new vscode.Position(0, 0), new vscode.Position(0, 0));
-						 const Pos = edit.selection.active;
-						 const NewPos = Pos.with(MsgIt.line, MsgIt.column);
-						 const newSelection = new vscode.Selection(NewPos, new vscode.Position(MsgIt.endLine, MsgIt.endColumn));
+					     
+						 const BeginPos = new vscode.Position(MsgIt.line, MsgIt.column);
+						 const EndPos = new vscode.Position(MsgIt.endLine, MsgIt.endColumn);
+						 const newSelection = new vscode.Selection(BeginPos, EndPos);
 						 edit.selection = newSelection;
+						 edit.revealRange(new vscode.Range(BeginPos, EndPos));
+						
 					 }});
 		    	 });
 				 break;
@@ -186,7 +187,7 @@ function CreateTable(pvsrep : PVSReport)
 	  });
 html+="</td><td>";
 	  warning.positions.forEach(element => {
-		  html+= "<a onclick= 'ShowFile(\""+ element.file.replace(/\\/g, '\\\\') +"\", "+element.line+", "+element.endLine+", "+element.column+", "+element.endColumn+")' >"+ element.file +"</a>" + "(" + element.line + ")<br>";
+		  html+= "<a title='"+element.file+"' onclick= 'ShowFile(\""+ element.file.replace(/\\/g, '\\\\') +"\", "+element.line+", "+element.endLine+", "+element.column+", "+element.endColumn+")' >"+ element.file.replace(/^.*[\\/]/, '') +"</a>" + "(" + element.line + ")<br>";
 		
 	  });
 	  html+= "</td></tr>";
