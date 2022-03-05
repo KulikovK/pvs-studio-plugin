@@ -36,8 +36,6 @@
           "name": "PVS Panel View",
           "icon": "",
           "type": "webview"
-          
-          
         }
       ]
     }
