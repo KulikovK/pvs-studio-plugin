@@ -46,12 +46,12 @@ class PVSReportProvide implements vscode.WebviewViewProvider
 		webviewView.webview.options = {
 			// Allow scripts in the webview
 			enableScripts: true,
-
 			localResourceRoots: [
 				this._extensionUri
 			]
 		};
 
+		
 		webviewView.webview.html = CreateTable(this.pReport);
 
 		webviewView.webview.onDidReceiveMessage(MsgIt =>{
@@ -94,6 +94,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const PVSWebpanelPrivider = new PVSReportProvide(context.extensionUri, new PVSReport(), context);
 	var DisponseWebPanel = vscode.window.registerWebviewViewProvider("PVSPanelView", PVSWebpanelPrivider);
     
+	
+
 	if(PVSWebpanelPrivider._view)
 	{
 		//PVSWebpanelPrivider._view.webview.
@@ -133,8 +135,38 @@ var dtScript =`
 
     const table = $('#pvst').DataTable({
 		paging: true,
-		responsive: true
+		responsive: {
+            details: {
+                renderer: function ( api, rowIdx, columns ) {
+                    var data = $.map( columns, function ( col, i ) {
+                        return col.hidden ?
+                            '<tr style="background: #31383d" data-dt-row="'+col.rowIndex+'" data-dt-column="'+col.columnIndex+'">'+
+                                '<td>'+col.title+':'+'</td> '+
+                                '<td>'+col.data+'</td>'+
+                            '</tr>' :
+                            '';
+                    } ).join('');
+ 
+                    return data ?
+                        $('<table/>').append( data ) :
+                        false;
+                }
+            }
+        },
+		dom: 'p<"top"fl>rti',
+		fixedHeader: true,
+		processing: true,
+		lengthMenu: [
+            [ 10, 25, 50, -1 ],
+            [ '10', '25', '50', 'Show all' ]
+        ],
+		buttons: [
+			"colvis"
+		]
 	}); 
+
+
+
 
 	function ShowFile(filePath, line, endLine, column, endColumn)
 	{
@@ -163,21 +195,44 @@ function CreateTable(pvsrep : PVSReport)
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Cat Coding</title>
 		
-				
+		<!--		
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css"/>
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.css"/>
 		 
 		<script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.js"></script>
 		<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
 		<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.js"></script>
+		-->
+         
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/css/foundation.min.css"/>
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/zf/jq-3.6.0/dt-1.11.5/b-2.2.2/b-colvis-2.2.2/fh-3.2.2/r-2.2.9/sc-2.0.5/sb-1.3.2/sl-1.3.4/sr-1.1.0/datatables.min.css"/>
+		 
+		<script type="text/javascript" src="https://cdn.datatables.net/v/zf/jq-3.6.0/dt-1.11.5/b-2.2.2/b-colvis-2.2.2/fh-3.2.2/r-2.2.9/sc-2.0.5/sb-1.3.2/sl-1.3.4/sr-1.1.0/datatables.min.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.4.3/js/foundation.min.js"></script>
 		
+		
+
+
+		<style type="text/css">
+        body.vscode-light {
+  color: black;
+}
+
+body.vscode-dark {
+  color: white;
+}
+
+body.vscode-high-contrast {
+  color: red;
+}
+    </style>
 		
         
 
-	</head> <body style="background: white">`;
+	</head> <body">`;
 
-	 html  += '<table id="pvst" border="1px solid" style="background: black">';
-     html += '<thead><tr><th>Code</th><th>CWE</th><th>SAST</th><th>Message</th><th>Project</th><th>File</th></tr></thead><tbody>';
+	 html  += '<table id="pvst" class = "display responsive" style="width:100%" border="1px solid">';
+     html += '<thead style="background: #447fff; color: white"><tr><th>Code</th><th>CWE</th><th>SAST</th><th>Message</th><th>Project</th><th>File</th></tr></thead><tbody>';
      
 	 pvsrep.warnings.forEach((warning) =>{ 
       html+= '<tr  style="background: #2c3136">' + "<td>" + warning.code + "</td>"+ "<td>" + warning.cwe + "</td><td>" + warning.sastId + 
